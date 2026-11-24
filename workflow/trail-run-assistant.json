@@ -1,0 +1,276 @@
+{
+  "name": "My workflow",
+  "nodes": [
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "triggerAtHour": 11
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.4,
+      "position": [
+        0,
+        0
+      ],
+      "id": "0bacddac-27fd-4e2d-b767-de61a9081730",
+      "name": "Schedule Trigger"
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "# Role\nYou are a friendly, weather-aware trail running assistant.\n\n# Task\nCheck today's weather in Draper, Utah, pick the best trail from my trail list, create a calendar event for the run, and write the email update. Another step sends your final answer as an email, so your final answer must be the email body only.\n\n# Tools\n- `OpenWeatherMap`: current weather in Draper, Utah.\n- `Get row(s) in sheet in Google Sheets`: my trail list. Columns: Name, Miles, Elevation (feet climbed), Estimated Time, Shade Level (\"Shady\", \"Some Shade\" or \"Exposed\").\n- `Create an event in Google Calendar`: creates the run event.\n\n# Steps\n1. Get the current weather: temperature, conditions, wind.\n2. Read the trail list from Google Sheets.\n3. It is NOT a good day if there is a thunderstorm, heavy rain, snow or ice, or the temperature is above 95°F (35°C) or below 20°F (-7°C). Then do NOT create an event. Your final answer says today isn't a good day to run and why.\n4. Otherwise, pick ONE trail:\n   - If it is warm (above about 80°F / 27°C), choose \"Shady\" or \"Some Shade\".\n   - If it is mild or cool, any shade level is fine.\n   - Prefer trails under about 8 miles and under 2 hours.\n   - Avoid repeating a trail you recommended recently (use memory).\n5. Create exactly one calendar event: title \"Trail Run: <Trail Name>\", starting 6:00 AM today (Asia/Kolkata, +05:30), ending at start plus the trail's estimated time, with distance, elevation, shade and weather in the description.\n6. Write your final answer in the email format below.\n\n# Rules\n- Use only real data from the tools. Never invent trails or numbers.\n- Do not mention air quality or testing. Do not repeat tool calls.\n- Your final answer is ONLY the email body in HTML. No markdown, no asterisks, no extra commentary.\n\n# Email body format\nToday is a great day for a trail run! The weather in Draper is [temperature] and [conditions], with wind around [wind speed].<br><br>\nI recommend this trail:<br>\n<b>Trail:</b> [Name]<br>\n<b>Distance:</b> [Miles] miles<br>\n<b>Elevation Gain:</b> [Elevation] feet<br>\n<b>Estimated Time:</b> [Estimated Time]<br>\n<b>Shade:</b> [Shade Level]<br><br>\n[One short sentence on why it suits today's weather.] I've also added a calendar event for your run. Enjoy!",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 3.1,
+      "position": [
+        256,
+        0
+      ],
+      "id": "fa982e4f-fd7b-4485-a72c-6c6f6eae3be0",
+      "name": "AI Agent"
+    },
+    {
+      "parameters": {
+        "model": {
+          "__rl": true,
+          "mode": "list",
+          "value": "gpt-5-mini"
+        },
+        "builtInTools": {},
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
+      "typeVersion": 1.3,
+      "position": [
+        -16,
+        208
+      ],
+      "id": "6d018a37-f857-46be-8930-24061424f5a5",
+      "name": "OpenAI Chat Model",
+      "credentials": {
+        "openAiApi": {
+          "id": null,
+          "name": "",
+          "__aiGatewayManaged": true
+        }
+      }
+    },
+    {
+      "parameters": {
+        "sessionIdType": "customKey",
+        "sessionKey": "trail-run-session"
+      },
+      "type": "@n8n/n8n-nodes-langchain.memoryBufferWindow",
+      "typeVersion": 1.4,
+      "position": [
+        176,
+        208
+      ],
+      "id": "8ff883e0-5897-4683-a628-33c45abc259d",
+      "name": "Simple Memory"
+    },
+    {
+      "parameters": {
+        "cityName": "bangalore,in"
+      },
+      "type": "n8n-nodes-base.openWeatherMapTool",
+      "typeVersion": 1.1,
+      "position": [
+        528,
+        288
+      ],
+      "id": "6c128f3f-13d1-4028-b233-2e9e243431d8",
+      "name": "OpenWeatherMap",
+      "credentials": {
+        "openWeatherMapApi": {
+          "id": "HrOWGBa75JBNjdPH",
+          "name": "OpenWeatherMap account 3"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "documentId": {
+          "__rl": true,
+          "value": "1SiqkqtRQRWdbZE02e48wJCjl46eAIrGj3MEAKbmdnDM",
+          "mode": "list",
+          "cachedResultName": "trails",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1SiqkqtRQRWdbZE02e48wJCjl46eAIrGj3MEAKbmdnDM/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": 1839066350,
+          "mode": "list",
+          "cachedResultName": "Trails",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1SiqkqtRQRWdbZE02e48wJCjl46eAIrGj3MEAKbmdnDM/edit#gid=1839066350"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheetsTool",
+      "typeVersion": 4.7,
+      "position": [
+        784,
+        320
+      ],
+      "id": "74077df9-6566-42fd-942d-d23763cbd225",
+      "name": "Get row(s) in sheet in Google Sheets",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "3T2ZfOYdPICpsIeD",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "calendar": {
+          "__rl": true,
+          "value": "ahana4projects@gmail.com",
+          "mode": "list",
+          "cachedResultName": "ahana4projects@gmail.com"
+        },
+        "additionalFields": {}
+      },
+      "type": "n8n-nodes-base.googleCalendarTool",
+      "typeVersion": 1.4,
+      "position": [
+        336,
+        288
+      ],
+      "id": "e2306105-39b4-4023-b124-dbf9b4a6e602",
+      "name": "Create an event in Google Calendar",
+      "credentials": {
+        "googleCalendarOAuth2Api": {
+          "id": "AQntnhr10aBL2rM7",
+          "name": "Google Calendar account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "sendTo": "ahanadev24@gmail.com",
+        "subject": "Trail run update",
+        "message": "={{ $json.output }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.2,
+      "position": [
+        624,
+        0
+      ],
+      "id": "d94117c7-92aa-4d7e-9cee-545802011985",
+      "name": "Send a message",
+      "webhookId": "ee486a67-f8ce-447b-8765-08c7c54cbe73",
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "pZUFZYoUSB6I9vhx",
+          "name": "Gmail account"
+        }
+      }
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Schedule Trigger": {
+      "main": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "OpenAI Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Simple Memory": {
+      "ai_memory": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_memory",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "OpenWeatherMap": {
+      "ai_tool": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get row(s) in sheet in Google Sheets": {
+      "ai_tool": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Create an event in Google Calendar": {
+      "ai_tool": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "AI Agent": {
+      "main": [
+        [
+          {
+            "node": "Send a message",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": true,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate",
+    "timeSavedMode": "fixed",
+    "timezone": "Asia/Kolkata",
+    "callerPolicy": "workflowsFromSameOwner",
+    "availableInMCP": true
+  },
+  "versionId": "b451351f-4c67-4c18-ab43-79f0081d4b05",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "5928da1d39c8020084bab93d1e1fa1d9c078dbbded4fd14ec35ecafde312b922"
+  },
+  "nodeGroups": [],
+  "id": "rLamPHdH7sqJJsxL",
+  "tags": []
+}
